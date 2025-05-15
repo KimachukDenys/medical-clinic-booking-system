@@ -13,6 +13,7 @@ import EditServicePage from './pages/EditServicePage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import UpdateAppointmentForm from './components/services/UpdateAppointmentForm'; 
 import AppointmentDetailsPage from './pages/AppointmentDetailsPage';
+import UserProfilePage from './pages/UserProfilePage';
 import Navbar from './components/Navbar';
 
 const App: React.FC = () => {
@@ -101,6 +102,7 @@ const App: React.FC = () => {
           <Route path="/appointments" element={<AppointmentsPage />} />
           <Route path="/appointment/update/:id" element={<UpdateAppointmentForm />} />
           <Route path="/appointment/details/:id" element={<AppointmentDetailsPage />} />
+          <Route path="/user/profile/:id" element={<UserProfilePage />} />
 
           {userInfo?.role === 'doctor' && (
             <Route path="/doctor/profile/create" element={<CreateDoctorProfilePage />} />
