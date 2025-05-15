@@ -1,23 +1,24 @@
 import { Request, Response } from 'express';
-import Review from '../models/Review';
-import Appointment from '../models/Appointment';
+import {Review, Appointment, User, Service} from '../models';
 
-export const createReview = async (req: Request, res: Response) => {
+export const createReview = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { appointmentId, rating, comment } = req.body;
+    const { appointmentId, userId, rating, comment } = req.body;
 
     // Перевірити, що appointment існує
     const appointment = await Appointment.findByPk(appointmentId);
     if (!appointment) {
-      return res.status(404).json({ error: 'Appointment not found' });
+      res.status(404).json({ error: 'Appointment not found' });
+      return;
     }
 
     // Можна також перевірити, чи appointment "finished"
     if (appointment.status !== 'finished') {
-      return res.status(400).json({ error: 'You can only review finished appointments' });
+      res.status(400).json({ error: 'Ви можете залишати відгуки, якщо ваш запис завершився!' });
+      return;
     }
 
-    const review = await Review.create({ appointmentId, rating, comment });
+    const review = await Review.create({ appointmentId, userId, rating, comment });
     res.status(201).json(review);
   } catch (error) {
     console.error('Create review error:', error);
@@ -25,7 +26,7 @@ export const createReview = async (req: Request, res: Response) => {
   }
 };
 
-export const updateReview = async (req: Request, res: Response) => {
+export const updateReview = async (req: Request, res: Response): Promise<void> => {
   try {
     const reviewId = Number(req.params.id);
     const { rating, comment } = req.body;
@@ -33,7 +34,8 @@ export const updateReview = async (req: Request, res: Response) => {
     const review = await Review.findByPk(reviewId);
 
     if (!review) {
-      return res.status(404).json({ error: 'Review not found' });
+      res.status(404).json({ error: 'Review not found' });
+      return;
     }
 
     review.rating = rating ?? review.rating;
@@ -47,14 +49,14 @@ export const updateReview = async (req: Request, res: Response) => {
   }
 };
 
-// controllers/reviewController.ts
-export const deleteReview = async (req: Request, res: Response) => {
+export const deleteReview = async (req: Request, res: Response): Promise<void> => {
   try {
     const reviewId = Number(req.params.id);
     const review = await Review.findByPk(reviewId);
 
     if (!review) {
-      return res.status(404).json({ error: 'Review not found' });
+      res.status(404).json({ error: 'Review not found' });
+      return;
     }
 
     await review.destroy();
@@ -65,17 +67,62 @@ export const deleteReview = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getDoctorReviews = async (req: Request, res: Response) => {
   try {
     const doctorId = Number(req.params.doctorId);
+    const reviews = await Review.findAll({
+      include: [
+        {
+          model: Appointment,
+          where: { doctorId },
+          attributes: ['serviceId'],
+          include: [
+            {
+              model: Service,
+              attributes: ['title'],
+            },
+          ],
+        },
+        {
+          model: User,
+          as: 'author',
+          attributes: ['firstName', 'lastName'],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+    res.json(reviews);
+  } catch (error) {
+    console.error('Get doctor reviews error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const getServiceReviews = async (req: Request, res: Response) => {
+  try {
+    const serviceId = Number(req.params.serviceId);
 
     const reviews = await Review.findAll({
-      include: {
-        model: Appointment,
-        where: { doctorId },
-        attributes: [],
-      },
+      include: [
+        {
+          model: Appointment,
+          where: { serviceId },
+          attributes: ['doctorId'],
+          include: [
+            {
+              model: User,
+              as: 'doctor',
+              attributes: ['firstName', 'lastName'],
+            },
+          ],
+        },
+        {
+          model: User,
+          as: 'author',
+          attributes: ['firstName', 'lastName'],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
     });
 
     res.json(reviews);

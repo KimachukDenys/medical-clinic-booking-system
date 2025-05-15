@@ -86,6 +86,9 @@ const AppointmentsListForm: React.FC = () => {
                 <button onClick={() => handleEdit(appt.id)}>Редагувати</button>
                 <button onClick={() => navigate(`/appointment/details/${appt.id}`)}>Деталі</button>
                 <button onClick={() => handleDelete(appt.id)}>Видалити</button>
+                {appt.status === 'finished' && (
+                  <button onClick={() => navigate(`/review/${appt.id}`)}>Залишити відгук</button>
+                )}
               </td>
             </tr>
           ))}

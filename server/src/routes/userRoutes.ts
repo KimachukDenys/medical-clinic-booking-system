@@ -1,8 +1,7 @@
 import express from 'express';
 import { loginUser, registerUser, getUserProfile } from '../controllers/userController';
 import { getAllDoctors, getDoctorProfile, createDoctorProfile, updateDoctorProfile } from '../controllers/doctorController';
-import { authenticateToken } from '../middlwares/auth';
-import { authorizeRole } from '../middlwares/auth';
+import { authenticateToken, authorizeRole } from '../middlwares/auth';
 
 const router = express.Router();
 
@@ -13,6 +12,6 @@ router.get('/profile/:id', authenticateToken, getUserProfile);
 router.get('/doctors', getAllDoctors);
 router.get('/doctor/profile/:doctorId', getDoctorProfile);
 router.post('/doctor/profile/create', authenticateToken, authorizeRole(['doctor']), createDoctorProfile);
-router.put('/doctor/profile/edit/:userId', authenticateToken, authorizeRole(['doctor']), updateDoctorProfile);
+router.patch('/doctor/profile/edit/:userId', authenticateToken, authorizeRole(['doctor']), updateDoctorProfile);
 
 export default router;

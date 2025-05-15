@@ -10,8 +10,9 @@ import sequelize from '../config/database';
 class Review extends Model<InferAttributes<Review>, InferCreationAttributes<Review>> {
   declare id: CreationOptional<number>;
   declare appointmentId: number;
+  declare userId: number;
   declare rating: number;
-  declare comment: string | null; // або просто string, якщо comment завжди обов'язковий
+  declare comment: string | null;
 }
 
 Review.init({
@@ -24,6 +25,11 @@ Review.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'appointments', key: 'id' }
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'users', key: 'id' }  // ДОДАНО
   },
   rating: {
     type: DataTypes.INTEGER,
@@ -40,5 +46,6 @@ Review.init({
   tableName: 'reviews',
   timestamps: true,
 });
+
 
 export default Review;
