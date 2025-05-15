@@ -142,7 +142,6 @@ export const createDoctorProfile = async (
   }
 };
 
-
 export const updateDoctorProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
@@ -166,7 +165,6 @@ export const updateDoctorProfile = async (req: Request, res: Response): Promise<
     res.status(500).json({ error: 'Server error' });
   }
 };
-
 
 export const getDoctorProfile = async (req: Request, res: Response): Promise<void> => {
   try {

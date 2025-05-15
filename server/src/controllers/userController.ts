@@ -99,3 +99,28 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getUserProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'Invalid userId parameter' });
+      return;
+    }
+
+    const user = await User.findOne({
+      where: { id: id},
+      attributes: ['id', 'firstName', 'lastName', 'email', 'phone', 'photoUrl'],
+    });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.status(200).json(user);
+  } catch (err) {
+    console.error('Get user by ID Error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

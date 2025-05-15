@@ -32,7 +32,7 @@ const Navbar: React.FC<Props> = ({ id, role, onLogout, isAuthenticated, firstNam
       {isAuthenticated ? (
         <>
           {' '}| <Link to="/appointments/">Записи</Link>
-          {' '}| <span>{firstName} {lastName}</span>
+          {' '}| <Link to={`/user/profile/${id}`}>{firstName} {lastName}</Link>
           {' '}| <button onClick={onLogout}>Вийти</button>
         </>
       ) : (
