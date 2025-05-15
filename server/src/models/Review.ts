@@ -1,7 +1,18 @@
-import { DataTypes, Model } from 'sequelize';
+import {
+  DataTypes,
+  Model,
+  InferAttributes,
+  InferCreationAttributes,
+  CreationOptional,
+} from 'sequelize';
 import sequelize from '../config/database';
 
-class Review extends Model {}
+class Review extends Model<InferAttributes<Review>, InferCreationAttributes<Review>> {
+  declare id: CreationOptional<number>;
+  declare appointmentId: number;
+  declare rating: number;
+  declare comment: string | null; // або просто string, якщо comment завжди обов'язковий
+}
 
 Review.init({
   id: {
@@ -21,6 +32,7 @@ Review.init({
   },
   comment: {
     type: DataTypes.TEXT,
+    allowNull: true,
   }
 }, {
   sequelize,

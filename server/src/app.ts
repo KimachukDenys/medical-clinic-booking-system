@@ -24,7 +24,7 @@ app.use('/api/protected', protectedRoutes);
 app.use('/images', express.static(path.join(__dirname, '../images')));
 
 // Роутер
-app.use('/api/users', userRoutes);  // Тут використовуємо роутер для маршруту '/api/users'
+app.use('/api/users', userRoutes); 
 app.use('/api/services', serviceRoutes);
 app.use('/api/categories', categoryRoutes); 
 
