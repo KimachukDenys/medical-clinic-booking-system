@@ -145,17 +145,25 @@ export const createDoctorProfile = async (
 export const updateDoctorProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
-    const { education, experience, bio } = req.body;
+    const { education, experience, bio, photoUrl } = req.body;
 
+    
     const profile = await DoctorProfile.findOne({ where: { userId } });
     if (!profile) {
       res.status(404).json({ error: 'Profile not found' });
       return;
     }
-
+    
     profile.education = education ?? profile.education;
     profile.experience = experience ?? profile.experience;
     profile.bio = bio ?? profile.bio;
+    
+    const doctor = await User.findByPk(userId);
+    
+    if (doctor) {
+      doctor.photoUrl = photoUrl ?? doctor.photoUrl;
+      await doctor.save();
+    }
 
     await profile.save();
 

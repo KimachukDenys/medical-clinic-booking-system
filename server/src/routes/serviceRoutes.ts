@@ -1,10 +1,9 @@
 // src/routes/serviceRoutes.ts
 import express from 'express';
-import { getAllServices, getServiceById, createService, updateService} from '../controllers/serviceController';
+import { getAllServices, getServiceById, createService, getServicesForDoctor, updateService} from '../controllers/serviceController';
 import { createAppointment, updateAppointment, getAllAppointments, getAppointmentById, getBookedTimes, deleteAppointment } from '../controllers/appointmentController';
 import { assignDoctorToService, getDoctorsForService, remoteDoctorFromService } from '../controllers/doctorController';
-import { authenticateToken } from '../middlwares/auth';
-import { authorizeRole } from '../middlwares/auth';
+import { authenticateToken, authorizeRole } from '../middlwares/auth';
 
 const router = express.Router();
 
@@ -25,5 +24,7 @@ router.delete('/appointments/:id', authenticateToken, deleteAppointment);
 router.post('/:id/add/doctors', authenticateToken, authorizeRole(['admin']), assignDoctorToService);
 router.delete('/:id/remove/doctors/:doctorId', authenticateToken, authorizeRole(['admin']), remoteDoctorFromService);
 router.get('/:id/doctors', authenticateToken, getDoctorsForService);
+router.get('/:id/services', authenticateToken, getServicesForDoctor);
+
 
 export default router;

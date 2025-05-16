@@ -6,7 +6,6 @@ import { DataTypes, Model, Optional,
 import sequelize from '../config/database';
 import Category from './Categories';
 import User from './User';
-import ServiceDoctor from './ServiceDoctor';  // Модель для зв'язку
 
 interface ServiceAttributes {
   id: number;

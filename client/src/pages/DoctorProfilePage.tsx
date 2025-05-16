@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getDoctorProfile } from '../api/doctorApi';
 import EditDoctorProfileForm from '../components/doctors/EditDoctorProfileForm';
+import BookAppointmentPage from './BookAppointmentPage';
+import Modal from '../components/Modal';
+import ReviewList from '../components/review/ReviewList';
 
 const DoctorProfilePage = () => {
   const { doctorId } = useParams<{ doctorId: string }>();
   const [doctor, setDoctor] = useState<any>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const loadDoctorProfile = async () => {
@@ -43,13 +47,25 @@ const DoctorProfilePage = () => {
       <p>Experience: {doctor.profile?.experience}</p>
       <p>Bio: {doctor.profile?.bio}</p>
       {doctor.profile?.photoUrl && <img src={doctor.profile.photoUrl} alt="Doctor" width={200} />}
-
       {isOwnProfile && (
         <>
-          <h3>Редагувати профіль</h3>
           <EditDoctorProfileForm userId={Number(doctorId)} />
         </>
       )}
+      {/* Кнопка для бронювання */}
+      <button onClick={() => setShowModal(true)}>
+        Забронювати
+      </button>
+
+      {showModal && (
+        <Modal onClose={() => setShowModal(false)}>
+          <BookAppointmentPage doctorId={Number(doctorId)} />
+        </Modal>
+      )}
+
+      <div>    
+        <ReviewList serviceId={Number(doctorId)} />
+      </div>
     </div>
   );
 };

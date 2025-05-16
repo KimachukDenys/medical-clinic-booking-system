@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
-import {Service, ServiceDoctor } from '../models/';
-import Category from '../models/Categories';
+import {Service, ServiceDoctor, Category, User } from '../models/';
 import { uploadImage } from '../middlwares/upload'; // Перевірте правильність шляху до middleware
 
 // Створити сервіс (тільки адмін)
@@ -47,7 +46,6 @@ export const getAllServices = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getServiceById = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
@@ -63,6 +61,34 @@ export const getServiceById = async (req: Request, res: Response): Promise<void>
   } catch (error) {
     console.error('Помилка при отриманні сервісу:', error);
     res.status(500).json({ message: 'Внутрішня помилка сервера' });
+  }
+};
+
+export const getServicesForDoctor = async (req: Request, res: Response): Promise<void> => {
+  const doctorId = Number(req.params.id);
+  if (isNaN(doctorId)) {
+    res.status(400).json({ message: 'Invalid doctorId' });
+    return;
+  }
+
+  try {
+    const doctor = await User.findByPk(doctorId, {
+      include: {
+        model: Service,
+        as: 'services',          // важливо вказати псевдонім
+        through: { attributes: [] },
+      },
+    });
+
+    if (!doctor) {
+      res.status(404).json({ message: 'Doctor not found' });
+      return;
+    }
+
+    res.json(doctor.services);  // services з маленької літери, як у асоціації
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

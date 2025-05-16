@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import BookAppointmentPage from './BookAppointmentPage';
 import Modal from '../components/Modal';
+import ReviewList from '../components/review/ReviewList';
 
 const ServiceDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +14,7 @@ const ServiceDetailsPage = () => {
     axios.get(`http://localhost:5000/api/services/${id}`)
       .then(res => setService(res.data))
       .catch(err => console.error(err));
+      console.log('service ID', id);
   }, [id]);
 
   if (!service) return <p>Loading...</p>;
@@ -35,9 +37,13 @@ const ServiceDetailsPage = () => {
 
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
-          <BookAppointmentPage />
+          <BookAppointmentPage serviceId={Number(id)} />
         </Modal>
       )}
+
+      <div>    
+        <ReviewList serviceId={Number(id)} />
+      </div>
     </div>
   );
 };

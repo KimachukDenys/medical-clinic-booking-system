@@ -1,4 +1,3 @@
-// src/pages/CreateDoctorProfilePage.tsx
 import React from 'react';
 import CreateDoctorProfileForm from '../components/doctors/CreateDoctorProfileForm'; // або ../pages, якщо там лежить
 
