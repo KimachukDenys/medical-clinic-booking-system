@@ -1,133 +1,70 @@
 import { Request, Response } from 'express';
-import {Review, Appointment, User, Service} from '../models';
+import { ReviewService } from '../services/reviewService';
 
-export const createReview = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { appointmentId, userId, rating, comment } = req.body;
+export class ReviewController {
+  constructor(private reviewService: ReviewService) {}
 
-    // Перевірити, що appointment існує
-    const appointment = await Appointment.findByPk(appointmentId);
-    if (!appointment) {
-      res.status(404).json({ error: 'Appointment not found' });
-      return;
+  createReview = async (req: Request, res: Response) => {
+    try {
+      const { appointmentId, rating, comment, userId } = req.body;
+      const review = await this.reviewService.createReview({ appointmentId, userId, rating, comment });
+      res.status(201).json(review);
+    } catch (e: any) {
+      this.handleError(e, res);
     }
+  };
 
-    // Можна також перевірити, чи appointment "finished"
-    if (appointment.status !== 'finished') {
-      res.status(400).json({ error: 'Ви можете залишати відгуки, якщо ваш запис завершився!' });
-      return;
+  updateReview = async (req: Request, res: Response) => {
+    try {
+      const id = +req.params.id;
+      const { rating, comment } = req.body;
+      const review = await this.reviewService.updateReview(id, { rating, comment });
+      res.status(200).json(review);
+    } catch (e: any) {
+      this.handleError(e, res);
     }
+  };
 
-    const review = await Review.create({ appointmentId, userId, rating, comment });
-    res.status(201).json(review);
-  } catch (error) {
-    console.error('Create review error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-export const updateReview = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const reviewId = Number(req.params.id);
-    const { rating, comment } = req.body;
-
-    const review = await Review.findByPk(reviewId);
-
-    if (!review) {
-      res.status(404).json({ error: 'Review not found' });
-      return;
+  deleteReview = async (req: Request, res: Response) => {
+    try {
+      const id = +req.params.id;
+      await this.reviewService.deleteReview(id);
+      res.status(204).send();
+    } catch (e: any) {
+      this.handleError(e, res);
     }
+  };
 
-    review.rating = rating ?? review.rating;
-    review.comment = comment ?? review.comment;
-    await review.save();
-
-    res.status(200).json(review);
-  } catch (error) {
-    console.error('Update review error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-export const deleteReview = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const reviewId = Number(req.params.id);
-    const review = await Review.findByPk(reviewId);
-
-    if (!review) {
-      res.status(404).json({ error: 'Review not found' });
-      return;
+  getDoctorReviews = async (req: Request, res: Response) => {
+    try {
+      const doctorId = +req.params.doctorId;
+      const reviews = await this.reviewService.getDoctorReviews(doctorId);
+      res.json(reviews);
+    } catch (e: any) {
+      this.handleError(e, res);
     }
+  };
 
-    await review.destroy();
-    res.status(204).send(); // No Content
-  } catch (error) {
-    console.error('Delete review error:', error);
-    res.status(500).json({ error: 'Server error' });
+  getServiceReviews = async (req: Request, res: Response) => {
+    try {
+      const serviceId = +req.params.serviceId;
+      const reviews = await this.reviewService.getServiceReviews(serviceId);
+      res.json(reviews);
+    } catch (e: any) {
+      this.handleError(e, res);
+    }
+  };
+
+  private handleError(err: Error, res: Response) {
+    const [kind, detail] = err.message.split(':');
+    switch (kind) {
+      case 'Validation':
+        return res.status(400).json({ message: detail });
+      case 'NotFound':
+        return res.status(404).json({ message: detail });
+      default:
+        console.error(err);
+        return res.status(500).json({ message: 'Server error' });
+    }
   }
-};
-
-export const getDoctorReviews = async (req: Request, res: Response) => {
-  try {
-    const doctorId = Number(req.params.doctorId);
-    const reviews = await Review.findAll({
-      include: [
-        {
-          model: Appointment,
-          where: { doctorId },
-          attributes: ['serviceId'],
-          include: [
-            {
-              model: Service,
-              attributes: ['title'],
-            },
-          ],
-        },
-        {
-          model: User,
-          as: 'author',
-          attributes: ['firstName', 'lastName'],
-        },
-      ],
-      order: [['createdAt', 'DESC']],
-    });
-    res.json(reviews);
-  } catch (error) {
-    console.error('Get doctor reviews error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-export const getServiceReviews = async (req: Request, res: Response) => {
-  try {
-    const serviceId = Number(req.params.serviceId);
-
-    const reviews = await Review.findAll({
-      include: [
-        {
-          model: Appointment,
-          where: { serviceId },
-          attributes: ['doctorId'],
-          include: [
-            {
-              model: User,
-              as: 'doctor',
-              attributes: ['firstName', 'lastName'],
-            },
-          ],
-        },
-        {
-          model: User,
-          as: 'author',
-          attributes: ['firstName', 'lastName'],
-        },
-      ],
-      order: [['createdAt', 'DESC']],
-    });
-
-    res.json(reviews);
-  } catch (error) {
-    console.error('Get doctor reviews error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
+}

@@ -38,7 +38,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayedDates, setDisplayedDates] = useState(() =>
-    getNextWeekdays(new Date(), 20)
+    getNextWeekdays(new Date(), 10)
   );
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
 
   const handleLoadMoreDates = () => {
     const lastDate = new Date(displayedDates[displayedDates.length - 1].value);
-    const moreDates = getNextWeekdays(lastDate, 20);
+    const moreDates = getNextWeekdays(lastDate, 10);
     setDisplayedDates((prev) => [...prev, ...moreDates]);
   };
 

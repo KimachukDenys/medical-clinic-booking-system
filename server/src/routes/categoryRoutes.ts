@@ -1,13 +1,14 @@
-// src/routes/categoryRoutes.ts
 import { Router } from 'express';
-import { createCategory, getAllCategories } from '../controllers/categoryController';
+import { CategoryService } from '../services/categoryService';
+import { CategoryController } from '../controllers/categoryController';
+import { authenticateToken, authorizeRole } from '../middlwares/auth';
 
 const router = Router();
+const controller = new CategoryController(new CategoryService());
 
-// Створити категорію
-router.post('/create', createCategory);
-
-// Отримати всі категорії
-router.get('/', getAllCategories);
+router.post('/create',authenticateToken, authorizeRole(['admin']), controller.createCategory);      
+router.get('/', controller.getAllCategories);
+router.put('/:id',authenticateToken, authorizeRole(['admin']), controller.updateCategory);
+router.delete('/:id',authenticateToken, authorizeRole(['admin']), controller.deleteCategory);    
 
 export default router;

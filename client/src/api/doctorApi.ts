@@ -15,7 +15,6 @@ export const getDoctorProfile = async (doctorId: number) => {
 };
 
 // Створити профіль лікаря
-
 export const createDoctorProfile = async (
   profileData: {
     education: string;

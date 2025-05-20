@@ -5,7 +5,7 @@ import Service from './Service';
 export type UserRole = 'patient' | 'doctor' | 'admin';
 export type Gender = 'male' | 'female' | 'other';
 
-interface UserAttributes {
+export interface UserAttributes {
   id: number;
   firstName: string;
   lastName: string;
