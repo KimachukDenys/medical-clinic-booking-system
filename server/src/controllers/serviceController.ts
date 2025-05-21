@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { ServiceService } from '../services/serviceService';
 import { uploadImage } from '../middlwares/upload';
 
@@ -7,30 +7,29 @@ export class ServiceController {
 
   createService = [
     uploadImage,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response, next: NextFunction) => {
       try {
         const { title, description, price, categoryId } = req.body;
         const imagePath = req.file ? `images/${req.file.filename}` : null;
         const newService = await this.serviceService.createService({ title, description, price, categoryId, imagePath });
         res.status(201).json(newService);
       } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Failed to create service.' });
+        next(err);
       }
     }
   ];
 
-  getAllServices = async (req: Request, res: Response) => {
+  getAllServices = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const includeHidden = req.query.includeHidden === 'true';
       const services = await this.serviceService.getAllServices(includeHidden);
       res.status(200).json(services);
     } catch (error) {
-      res.status(500).json({ message: 'Помилка при отриманні сервісів' });
+      next(error);
     }
   };
 
-  getServiceById = async (req: Request, res: Response): Promise<void> => {
+  getServiceById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
       res.status(400).json({ message: 'Invalid service id' });
@@ -44,12 +43,11 @@ export class ServiceController {
       }
       res.json(service);
     } catch (error) {
-      console.error('Помилка при отриманні сервісу:', error);
-      res.status(500).json({ message: 'Внутрішня помилка сервера' });
+      next(error);
     }
   };
 
-  getServicesForDoctor = async (req: Request, res: Response): Promise<void> => {
+  getServicesForDoctor = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const doctorId = Number(req.params.id);
     if (isNaN(doctorId)) {
       res.status(400).json({ message: 'Invalid doctorId' });
@@ -63,14 +61,13 @@ export class ServiceController {
       }
       res.json(services);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error' });
+      next(error);
     }
   };
 
   updateService = [
     uploadImage,
-    async (req: Request, res: Response): Promise<void> => {
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
         res.status(400).json({ message: 'Invalid service id' });
@@ -97,8 +94,7 @@ export class ServiceController {
 
         res.json(updatedService);
       } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Не вдалося оновити сервіс.' });
+        next(err);
       }
     }
   ];

@@ -3,8 +3,6 @@ import {
   Model,
   Optional,
   Association,
-  InferAttributes,
-  InferCreationAttributes,
 } from 'sequelize';
 import sequelize from '../config/database';
 import User from './User';

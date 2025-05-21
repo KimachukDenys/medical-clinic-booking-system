@@ -1,5 +1,4 @@
-// src/types/express.d.ts
-import 'express'; // додаємо це, якщо його немає
+import 'express';
 
 declare global {
   namespace Express {
@@ -14,4 +13,4 @@ declare global {
   }
 }
 
-export {}; // Важливо для того, щоб TypeScript правильно зрозумів, що це модифікація модулю
+export {};

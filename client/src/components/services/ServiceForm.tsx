@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getAllDoctors } from '../../api/doctorApi'; // Ваш API для отримання лікарів
-import { createService } from '../../api/serviceApi';
+import { getAllDoctors } from '../../api/doctorApi';
+import { createService, assignDoctorToService } from '../../api/serviceApi';
+import {getAllCategories } from '../../api/categoryApi'
 
 interface Category {
   id: number;
@@ -17,20 +18,17 @@ const ServiceForm = ({ token }: { token: string }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [categoryId, setCategoryId] = useState<number | string>(''); // Для вибору категорії
-  const [image, setImage] = useState<File | null>(null); // Для зображення
-  const [categories, setCategories] = useState<Category[]>([]); // Для отримання списку категорій
-  const [doctors, setDoctors] = useState<User[]>([]); // Для списку доступних лікарів
-  const [selectedDoctors, setSelectedDoctors] = useState<User[]>([]); // Для вибраних лікарів
+  const [categoryId, setCategoryId] = useState<number | string>('');
+  const [image, setImage] = useState<File | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [doctors, setDoctors] = useState<User[]>([]);
+  const [selectedDoctors, setSelectedDoctors] = useState<User[]>([]);
 
   useEffect(() => {
-    // Отримуємо список категорій з API
-    fetch('http://localhost:5000/api/categories')
-      .then(response => response.json())
-      .then(data => setCategories(data))
+    getAllCategories()
+      .then(responce => setCategories(responce.data))
       .catch(error => console.error('Error fetching categories:', error));
 
-    // Отримуємо список лікарів з вашого API
     getAllDoctors()
       .then(response => setDoctors(response.data))
       .catch(error => console.error('Error fetching doctors:', error));
@@ -43,7 +41,6 @@ const ServiceForm = ({ token }: { token: string }) => {
   };
 
   const handleDoctorSelect = (doctor: User) => {
-    // Перевірка, чи лікар вже доданий
     if (!selectedDoctors.some(d => d.id === doctor.id)) {
       setSelectedDoctors(prevDoctors => [...prevDoctors, doctor]);
     }
@@ -55,66 +52,106 @@ const ServiceForm = ({ token }: { token: string }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!image) return alert('Будь ласка, завантажте зображення.');
 
-    if (image) {
-      // Створюємо форму для відправки файлу
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('price', price);
-      formData.append('categoryId', categoryId ? categoryId.toString() : '');
-      formData.append('image', image);
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('price', price);
+    formData.append('categoryId', categoryId.toString());
+    formData.append('image', image);
 
-      // Додаємо лікарів до форми
-      selectedDoctors.forEach(doctor => {
-        formData.append('doctors[]', doctor.id.toString());
-      });
+    try {
+      const response = await createService(formData, token);
+      const serviceId = response.data?.id;
 
-      try {
-        await createService(formData, token);
-        alert('Сервіс створено!');
-      } catch (error) {
-        alert('Помилка при створенні сервісу');
+      if (!serviceId) throw new Error('Не вдалося отримати ID сервісу.');
+
+      // Призначити кожного лікаря до сервісу
+      for (const doctor of selectedDoctors) {
+        await assignDoctorToService(serviceId, doctor.id, token);
       }
+
+      alert('Сервіс створено!');
+      // reset form optionally
+    } catch (error) {
+      alert('Помилка при створенні сервісу');
+      console.error(error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-        placeholder="Назва"
-      />
-      <textarea
-        value={description}
-        onChange={e => setDescription(e.target.value)}
-        placeholder="Опис"
-      />
-      <input
-        value={price}
-        onChange={e => setPrice(e.target.value)}
-        placeholder="Ціна"
-        type="number"
-      />
-
-      {/* Вибір категорії */}
-      <select value={categoryId} onChange={e => setCategoryId(e.target.value)}>
-        <option value="">Виберіть категорію</option>
-        {categories.map(category => (
-          <option key={category.id} value={category.id}>
-            {category.name}
-          </option>
-        ))}
-      </select>
-
-      {/* Поле для завантаження зображення */}
-      <input type="file" onChange={handleImageChange} />
-
-      {/* Вибір лікарів */}
+    <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-md">
+      <h2 className="text-xl font-semibold">Додати новий сервіс</h2>
       <div>
-        <h3>Виберіть лікарів</h3>
-        <select onChange={(e) => handleDoctorSelect(doctors.find(doctor => doctor.id === Number(e.target.value))!)} defaultValue="">
+        <label className="block text-sm font-medium text-gray-700">Назва</label>
+        <input
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="Назва"
+          className="mt-1 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Опис</label>
+        <textarea
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          placeholder="Опис"
+          rows={3}
+          className="mt-1 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Ціна</label>
+        <input
+          value={price}
+          onChange={e => setPrice(e.target.value)}
+          placeholder="Ціна"
+          type="number"
+          className="mt-1 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Категорія</label>
+        <select
+          value={categoryId}
+          onChange={e => setCategoryId(e.target.value)}
+          className="mt-1 w-full px-4 py-2 border rounded-md focus:outline-none"
+        >
+          <option value="">Виберіть категорію</option>
+          {categories.map(category => (
+            <option key={category.id} value={category.id}>{category.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Зображення</label>
+        <input
+          type="file"
+          onChange={handleImageChange}
+          className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+                     file:rounded-full file:border-0
+                     file:text-sm file:font-semibold
+                     file:bg-blue-50 file:text-blue-700
+                     hover:file:bg-blue-100"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Лікарі</label>
+        <select
+          onChange={(e) => {
+            const doctor = doctors.find(d => d.id === Number(e.target.value));
+            if (doctor) handleDoctorSelect(doctor);
+          }}
+          defaultValue=""
+          className="w-full px-4 py-2 border rounded-md"
+        >
           <option value="">Виберіть лікаря</option>
           {doctors.map(doctor => (
             <option key={doctor.id} value={doctor.id}>
@@ -123,21 +160,30 @@ const ServiceForm = ({ token }: { token: string }) => {
           ))}
         </select>
 
-        {/* Список вибраних лікарів */}
-        <div>
-          <h4>Вибрані лікарі:</h4>
-          <ul>
+        {selectedDoctors.length > 0 && (
+          <ul className="mt-3 space-y-2">
             {selectedDoctors.map(doctor => (
-              <li key={doctor.id}>
-                {doctor.firstName} {doctor.lastName}
-                <button type="button" onClick={() => handleDoctorRemove(doctor.id)}>Видалити</button>
+              <li key={doctor.id} className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md">
+                <span>{doctor.firstName} {doctor.lastName}</span>
+                <button
+                  type="button"
+                  onClick={() => handleDoctorRemove(doctor.id)}
+                  className="text-red-600 text-sm hover:underline"
+                >
+                  Видалити
+                </button>
               </li>
             ))}
           </ul>
-        </div>
+        )}
       </div>
 
-      <button type="submit">Створити</button>
+      <button
+        type="submit"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded"
+      >
+        Створити сервіс
+      </button>
     </form>
   );
 };

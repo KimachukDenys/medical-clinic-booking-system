@@ -1,6 +1,29 @@
 import { Review, Appointment, User, Service } from '../models';
 
 export class ReviewService {
+
+    async getUserReviews(userId: number) {
+    return Review.findAll({
+    where: { userId },
+      include: [
+        {
+          model: Appointment,
+          as: 'appointment', // використовуйте as, якщо ви вказали alias
+          include: [
+            { model: Service,},
+            { model: User, as: 'doctor', attributes: ['firstName', 'lastName']}
+          ]
+        }
+      ]
+    });
+  }
+
+  async hasUserReviewedAppointment(appointmentId: number, userId: number): Promise<boolean> {
+    const review = await Review.findOne({
+      where: { appointmentId, userId },
+    });
+    return !!review;
+  }
   async createReview(data: {
     appointmentId: number;
     userId: number;
@@ -9,12 +32,20 @@ export class ReviewService {
   }) {
     const appointment = await Appointment.findByPk(data.appointmentId);
     if (!appointment) throw new Error('NotFound:Appointment not found');
+
     if (appointment.status !== 'finished') {
       throw new Error('Validation:Ви можете залишати відгуки, якщо ваш запис завершився!');
     }
 
+    const alreadyReviewed = await this.hasUserReviewedAppointment(data.appointmentId, data.userId);
+    if (alreadyReviewed) {
+      throw new Error('Validation:Ви вже залишили відгук на це бронювання!');
+    }
+
     return await Review.create(data);
   }
+
+
 
   async updateReview(id: number, data: { rating?: number; comment?: string }) {
     const review = await Review.findByPk(id);

@@ -6,9 +6,9 @@ import Category from './Categories';
 import Appointment from './Appointment';
 import Review from './Review';
 import DoctorProfile from './DoctorProfile'
-import ServiceDoctor from './ServiceDoctor'; // Імпортуємо ServiceDoctor модель
+import ServiceDoctor from './ServiceDoctor';
 
-// Associations
+// Асоціації
 User.hasMany(Appointment, { foreignKey: 'patientId', as: 'appointments' });
 User.hasMany(Appointment, { foreignKey: 'doctorId', as: 'appointmentsAsDoctor' });
 
@@ -30,7 +30,6 @@ User.hasOne(DoctorProfile, { foreignKey: 'userId', as: 'profile' });
 DoctorProfile.belongsTo(User, { foreignKey: 'userId' });
 
 
-// Додано асоціації для зв'язку між лікарями та сервісами
 Service.belongsToMany(User, {
   through: ServiceDoctor,
   foreignKey: 'serviceId',
@@ -53,5 +52,5 @@ export {
   Appointment,
   Review,
   DoctorProfile,
-  ServiceDoctor, // Додаємо ServiceDoctor до експортів
+  ServiceDoctor,
 };

@@ -1,4 +1,3 @@
-// server/src/models/Appointment.ts
 import { DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from 'sequelize';
 import sequelize from '../config/database';
 

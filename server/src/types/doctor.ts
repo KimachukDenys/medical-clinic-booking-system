@@ -1,6 +1,4 @@
-// src/types/doctor.ts
 import DoctorProfile from '../models/DoctorProfile';
-// імпорт інтерфейсу UserAttributes
 
 export interface UserWithProfile{
   id: number;

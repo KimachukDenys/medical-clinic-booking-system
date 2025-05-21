@@ -1,48 +1,77 @@
-import React, { useState } from 'react';
-import { createReview } from '../../api/reviewApi';
+import React, {  useState } from 'react';
+import { createReview  } from '../../api/reviewApi';
 
-interface Props {
-  id?: number;
+interface ReviewFormProps {
   appointmentId: number;
+  userId: number;
+  token: string;
 }
 
-const ReviewForm: React.FC<Props> = ({ id, appointmentId }) => {
-  const userId = id || 0; // Використовуємо id, якщо він переданий, інакше 0
+const ReviewForm: React.FC<ReviewFormProps> = ({ appointmentId, userId, token }) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [message, setMessage] = useState('');
-  const token = localStorage.getItem('token');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) {
-      setMessage('Будь ласка, увійдіть');
-      return;
-    }
+    if (alreadyReviewed) return;
 
     try {
-      await createReview({ rating, comment, appointmentId, userId }, token);
-      setMessage('Відгук успішно надіслано!');
-    } catch (err) {
-      console.error(err);
-      setMessage('Помилка при надсиланні відгуку');
+      await createReview({ appointmentId, userId, rating, comment }, token);
+      setMessage('Дякуємо за ваш відгук!');
+      setAlreadyReviewed(true);
+    } catch (error: any) {
+      console.error(error);
+      setMessage(error.response?.data?.message || 'Сталася помилка при додаванні відгуку.');
     }
   };
 
+  if (alreadyReviewed) {
+    return (
+      <div className="p-4 bg-green-100 text-green-800 rounded">
+        Ви вже залишили відгук на це бронювання. Дякуємо!
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Оцінка:
-        <input type="number" min="1" max="5" value={rating} onChange={e => setRating(Number(e.target.value))} />
-      </label>
-      <br />
-      <label>
-        Коментар:
-        <textarea value={comment} onChange={e => setComment(e.target.value)} />
-      </label>
-      <br />
-      <button type="submit">Надіслати відгук</button>
-      {message && <p>{message}</p>}
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 bg-white rounded shadow space-y-4">
+      <div>
+        <label className="block font-semibold mb-1">Рейтинг:</label>
+        <select
+          value={rating}
+          onChange={e => setRating(Number(e.target.value))}
+          className="w-full border rounded p-2"
+        >
+          {[5,4,3,2,1].map(num => (
+            <option key={num} value={num}>{num} зірок</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block font-semibold mb-1">Коментар:</label>
+        <textarea
+          value={comment}
+          onChange={e => setComment(e.target.value)}
+          rows={4}
+          className="w-full border rounded p-2"
+          required
+          minLength={5}
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="w-full bg-primary text-white py-2 rounded hover:bg-blue-700 transition"
+      >
+        Залишити відгук
+      </button>
+
+      {message && (
+        <p className="mt-2 text-center text-red-600">{message}</p>
+      )}
     </form>
   );
 };

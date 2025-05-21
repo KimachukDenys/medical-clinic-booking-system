@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getBookedSlots } from '../../api/appointmentApi';
 
-
 interface AppointmentFormProps {
   value: { date: string; time: string };
   onChange: (value: { date: string; time: string }) => void;
@@ -79,9 +78,9 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
 
   return (
     <div>
-      <div>
-        <label>Оберіть дату:</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
+      <div className="mb-6">
+        <label className="block mb-2 font-semibold text-primary">Оберіть дату:</label>
+        <div className="flex flex-wrap gap-3">
           {displayedDates.map(({ label, value }) => (
             <button
               key={value}
@@ -90,13 +89,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
                 setTime('');
                 setDate(value);
               }}
-              style={{
-                padding: '8px 12px',
-                border: date === value ? '2px solid blue' : '1px solid gray',
-                borderRadius: '8px',
-                backgroundColor: date === value ? '#e0f0ff' : '#f9f9f9',
-                cursor: 'pointer',
-              }}
+              className={`px-4 py-2 rounded-lg border transition ${
+                date === value
+                  ? 'border-primary bg-primary text-background'
+                  : 'border-gray-300 bg-gray-100 text-primary hover:bg-primary hover:text-background'
+              }`}
             >
               {label}
             </button>
@@ -104,12 +101,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
           <button
             onClick={handleLoadMoreDates}
             type="button"
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              backgroundColor: '#eee',
-              cursor: 'pointer',
-            }}
+            className="px-4 py-2 rounded-lg bg-gray-200 text-primary hover:bg-gray-300 transition"
           >
             Показати ще
           </button>
@@ -117,30 +109,28 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
       </div>
 
       {date && (
-        <div style={{ marginTop: '20px' }}>
-          <label>Оберіть час:</label>
+        <div className="mb-6">
+          <label className="block mb-2 font-semibold text-primary">Оберіть час:</label>
           {loading ? (
-            <p>Завантаження доступних слотів...</p>
+            <p className="text-primary">Завантаження доступних слотів...</p>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
+            <div className="flex flex-wrap gap-3">
               {generateAvailableTimeSlots().map((slot) => (
                 <button
                   key={slot}
                   type="button"
                   onClick={() => setTime(slot)}
-                  style={{
-                    padding: '8px 12px',
-                    border: time === slot ? '2px solid green' : '1px solid gray',
-                    borderRadius: '8px',
-                    backgroundColor: time === slot ? '#d0ffd0' : '#f9f9f9',
-                    cursor: 'pointer',
-                  }}
+                  className={`px-4 py-2 rounded-lg border transition ${
+                    time === slot
+                      ? 'border-primary bg-primary text-background'
+                      : 'border-gray-300 bg-gray-100 text-primary hover:bg-primary hover:text-background'
+                  }`}
                 >
                   {slot}
                 </button>
               ))}
               {generateAvailableTimeSlots().length === 0 && (
-                <p>Немає доступних слотів на цю дату.</p>
+                <p className="text-primary">Немає доступних слотів на цю дату.</p>
               )}
             </div>
           )}

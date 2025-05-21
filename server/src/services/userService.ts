@@ -100,4 +100,55 @@ export class UserService {
 
     return user;
   }
+
+  async editUserProfile(userId: number, data: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    photoFileName?: string; // <- назва файлу після завантаження через multer
+  }) {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      throw new Error('NotFoundError: User not found');
+    }
+
+    const { firstName, lastName, phone, photoFileName } = data;
+
+    // Перевірка, чи email або phone вже використовуються іншим користувачем
+    const conditions: any[] = [];
+    if (phone) conditions.push({ phone });
+
+    if (conditions.length > 0) {
+      const existingUser = await User.findOne({
+        where: {
+          [Op.or]: conditions,
+          id: { [Op.ne]: userId },
+        },
+      });
+
+      if (existingUser) {
+        throw new Error('ConflictError: Email or phone already in use by another user');
+      }
+    }
+
+    // Формуємо шлях до фото, якщо файл було завантажено
+    const photoUrl = photoFileName ? `images/${photoFileName}` : undefined;
+
+    // Оновлення
+    await user.update({
+      firstName: firstName ?? user.firstName,
+      lastName: lastName ?? user.lastName,
+      phone: phone ?? user.phone,
+      photoUrl: photoUrl ?? user.photoUrl,
+    });
+
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      photoUrl: user.photoUrl,
+    };
+  }
+
 }

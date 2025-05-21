@@ -21,7 +21,7 @@ export const createAppointment = async (
 
 export const updateAppointment = async (id: number, updatedData: any, token: string) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}`,updatedData, {
+    const response = await axios.put(`${API_URL}/update/${id}`,updatedData, {
         headers: {Authorization: `Bearer ${token}`},
       }
     );
