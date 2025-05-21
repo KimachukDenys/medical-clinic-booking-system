@@ -1,211 +1,100 @@
 import { Request, Response } from 'express';
-import { User, Service, DoctorProfile } from '../models';
+import { DoctorService } from '../services/doctorService';
+import { UserWithProfile } from '../types/doctor';
 
-export const assignDoctorToService = async (req: Request, res: Response): Promise<void> => {
-  const serviceId = Number(req.params.id);
-  const { doctorId } = req.body;
+export class DoctorController {
+  constructor(private doctorService: DoctorService) {}
 
-  try {
-    const service = await Service.findByPk(serviceId);
-    if (!service) {
-      res.status(404).json({ message: 'Сервіс не знайдено' });
-      return;
+  /* ---- лікарі ⇄ сервіси ---- */
+
+  assignDoctorToService = async (req: Request, res: Response) => {
+    try {
+      await this.doctorService.assignDoctorToService(+req.params.id, req.body.doctorId);
+      res.status(200).json({ message: 'Доктора успішно додано до сервісу' });
+    } catch (e: any) {
+      this.handleError(e, res);
     }
+  };
 
-    const doctor = await User.findByPk(doctorId);
-    if (!doctor || doctor.role !== 'doctor') {
-      res.status(400).json({ message: 'Невірний доктор' });
-      return;
+  removeDoctorFromService = async (req: Request, res: Response) => {
+    try {
+      await this.doctorService.removeDoctorFromService(+req.params.id, +req.params.doctorId);
+      res.status(200).json({ message: 'Доктора успішно видалено із сервісу' });
+    } catch (e: any) {
+      this.handleError(e, res);
     }
+  };
 
-    await service.addDoctor(doctor); // Додавання лікаря до сервісу через асоціацію
+  getDoctorsForService = async (req: Request, res: Response) => {
+    try {
+      const doctors = await this.doctorService.getDoctorsForService(+req.params.id);
+      res.status(200).json(doctors);
+    } catch (e: any) {
+      this.handleError(e, res);
+    }
+  };
 
-    res.status(200).json({ message: 'Доктора успішно додано до сервісу' });
-  } catch (error) {
-    console.error('Помилка при додаванні доктора до сервісу:', error);
-    res.status(500).json({ message: 'Внутрішня помилка сервера' });
+  /* ---- довідник лікарів ---- */
+
+  getAllDoctors = async (_req: Request, res: Response) => {
+    const doctors = await this.doctorService.getAllDoctors();
+
+    // doctors — User[], профіль доктора — doctor.profile (DoctorProfile | null)
+    for (const doctor of doctors) {
+      if (doctor.profile) {
+        const rating = await doctor.profile.calculateRating();
+        doctor.profile.setDataValue('rating', rating);
+      }
+    }
+    // Віддаємо як є, Sequelize коректно серіалізує асоціації
+    res.status(200).json(doctors);
+  };
+
+  /* ---- профіль лікаря ---- */
+
+  createDoctorProfile = async (req: Request & { user?: { id: number } }, res: Response) => {
+    try {
+      const profile = await this.doctorService.createDoctorProfile(req.user!.id, req.body);
+      res.status(201).json(profile);
+    } catch (e: any) {
+      this.handleError(e, res);
+    }
+  };
+
+  /** оновлення — підтримує education, experience, bio, specialization, price, photoUrl */
+  updateDoctorProfile = async (req: Request, res: Response) => {
+    try {
+      const profile = await this.doctorService.updateDoctorProfile(+req.params.userId, req.body);
+      res.status(200).json(profile);
+    } catch (e: any) {
+      this.handleError(e, res);
+    }
+  };
+
+  getDoctorProfile = async (req: Request, res: Response) => {
+    try {
+      const doctor = await this.doctorService.getDoctorProfile(+req.params.doctorId);
+      res.status(200).json(doctor);
+    } catch (e: any) {
+      this.handleError(e, res);
+    }
+  };
+
+  /* ---- утиліта ---- */
+
+  private handleError(err: Error, res: Response) {
+    const [kind, detail] = err.message.split(':');
+
+    switch (kind) {
+      case 'Validation':
+        return res.status(400).json({ message: detail });
+      case 'NotFound':
+        return res.status(404).json({ message: detail });
+      case 'Conflict':
+        return res.status(409).json({ message: detail });
+      default:
+        console.error(err);
+        return res.status(500).json({ message: 'Внутрішня помилка сервера' });
+    }
   }
-};
-
-export const remoteDoctorFromService = async (req: Request, res: Response): Promise<void> => {
-  const serviceId = Number(req.params.id);
-  const doctorId  = Number(req.params.doctorId);
-
-  try {
-    const service = await Service.findByPk(serviceId);
-    if (!service) {
-      res.status(404).json({ message: 'Сервіс не знайдено' });
-      return;
-    }
-
-    const doctor = await User.findByPk(doctorId);
-    if (!doctor || doctor.role !== 'doctor') {
-      res.status(400).json({ message: 'Невірний доктор' });
-      return;
-    }
-
-    await service.removeDoctor(doctor); // Додавання лікаря до сервісу через асоціацію
-
-    res.status(200).json({ message: 'Доктора успішно додано до сервісу' });
-  } catch (error) {
-    console.error('Помилка при додаванні доктора до сервісу:', error);
-    res.status(500).json({ message: 'Внутрішня помилка сервера' });
-  }
-};
-
-export const getDoctorsForService = async (req: Request, res: Response): Promise<void> => {
-  const serviceId = Number(req.params.id);
-
-  try {
-    // Знайти сервіс разом з лікарями
-    const service = await Service.findByPk(serviceId, {
-      include: [{
-        model: User,
-        as: 'doctors',  // Використовуємо новий псевдонім
-        where: { role: 'doctor' },  // Тільки лікарі
-        required: false
-      }]
-    });
-
-    if (!service) {
-      res.status(404).json({ message: 'Сервіс не знайдено' });
-      return;
-    }
-
-    // Якщо лікарі відсутні, повертаємо порожній масив
-    const doctors = service.doctors || [];
-
-    res.status(200).json(doctors); // Повертаємо лікарів або порожній масив
-  } catch (error) {
-    console.error('Помилка при отриманні лікарів для сервісу:', error);
-    res.status(500).json({ message: 'Внутрішня помилка сервера' });
-  }
-};
-
-export const getAllDoctors = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const doctors = await User.findAll({
-      where: { role: 'doctor' },
-      attributes: ['id', 'firstName', 'lastName', 'email', 'phone'],
-      include: [
-        {
-          model: DoctorProfile,
-          as: 'profile',
-        },
-      ],
-    });
-
-    if (!doctors) {
-      res.status(404).json({ message: 'Доктори не знайдені' });
-      return;
-    }
-
-    res.json(doctors);
-  } catch (error) {
-    console.error('Помилка при отриманні лікарів:', error);
-    res.status(500).json({ message: 'Внутрішня помилка сервера' });
-  }
-};
-
-export const createDoctorProfile = async (
-  req: Request & { user?: { id: number; role: string } },
-  res: Response
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      res.status(400).json({ error: 'User not authenticated' });
-      return;
-    }
-
-    const { education, experience, bio } = req.body;
-
-    const user = await User.findByPk(userId);
-    if (!user || user.role !== 'doctor') {
-      res.status(404).json({ error: 'Doctor not found' });
-      return;
-    }
-
-    const existingProfile = await DoctorProfile.findOne({ where: { userId } });
-    if (existingProfile) {
-      res.status(400).json({ error: 'Profile already exists' });
-      return;
-    }
-
-    const profile = await DoctorProfile.create({ userId, education, experience, bio });
-
-    res.status(201).json(profile);
-  } catch (err) {
-    console.error('Create Profile Error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-export const updateDoctorProfile = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { userId } = req.params;
-    const { education, experience, bio, photoUrl } = req.body;
-
-    
-    const profile = await DoctorProfile.findOne({ where: { userId } });
-    if (!profile) {
-      res.status(404).json({ error: 'Profile not found' });
-      return;
-    }
-    
-    profile.education = education ?? profile.education;
-    profile.experience = experience ?? profile.experience;
-    profile.bio = bio ?? profile.bio;
-    
-    const doctor = await User.findByPk(userId);
-    
-    if (doctor) {
-      doctor.photoUrl = photoUrl ?? doctor.photoUrl;
-      await doctor.save();
-    }
-
-    await profile.save();
-
-    res.status(200).json(profile);
-  } catch (err) {
-    console.error('Update Profile Error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-export const getDoctorProfile = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const doctorId = Number(req.params.doctorId);
-    if (isNaN(doctorId)) {
-      res.status(400).json({ error: 'Invalid doctorId parameter' });
-      return;
-    }
-
-    const user = await User.findOne({
-      where: { id: doctorId, role: 'doctor' },
-      attributes: ['id', 'firstName', 'lastName', 'email', 'phone', 'photoUrl'],
-      include: [
-        {
-          model: DoctorProfile,
-          as: 'profile',
-        },
-        {
-          model: Service,
-          as: 'services',
-          through: { attributes: [] },
-        },
-      ],
-    });
-
-    if (!user) {
-      res.status(404).json({ error: 'Doctor not found' });
-      return;
-    }
-
-    res.status(200).json(user);
-  } catch (err) {
-    console.error('Get Doctor by ID Error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
+}

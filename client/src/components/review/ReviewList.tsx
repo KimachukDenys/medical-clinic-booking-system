@@ -6,7 +6,7 @@ type Review = {
   rating: number;
   comment: string;
   createdAt: string;
-  Appointment: {
+  appointment: {
     Service?: { title: string };
     doctor?: { firstName: string; lastName: string };
   };
@@ -55,12 +55,12 @@ const ReviewList: React.FC<Props> = ({ doctorId, serviceId, token, showDelete = 
           <div key={r.id} className="border p-2 mb-2">
             <p><strong>Оцінка:</strong> {r.rating}</p>
 
-            {doctorId && r.Appointment.Service && (
-              <p><strong>Послуга:</strong> {r.Appointment.Service.title}</p>
+            {doctorId && r.appointment.Service && (
+              <p><strong>Послуга:</strong> {r.appointment.Service.title}</p>
             )}
 
-            {serviceId && r.Appointment.doctor && (
-              <p><strong>Лікар:</strong> {r.Appointment.doctor.firstName} {r.Appointment.doctor.lastName}</p>
+            {serviceId && r.appointment.doctor && (
+              <p><strong>Лікар:</strong> {r.appointment.doctor.firstName} {r.appointment.doctor.lastName}</p>
             )}
 
             {r.author && (

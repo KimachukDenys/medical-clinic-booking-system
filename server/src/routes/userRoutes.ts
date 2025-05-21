@@ -1,17 +1,24 @@
 import express from 'express';
-import { loginUser, registerUser, getUserProfile } from '../controllers/userController';
-import { getAllDoctors, getDoctorProfile, createDoctorProfile, updateDoctorProfile } from '../controllers/doctorController';
+import { UserController } from '../controllers/userController';
+import { UserService } from '../services/userService';
+import { DoctorController } from '../controllers/doctorController';
+import { DoctorService } from '../services/doctorService';
 import { authenticateToken, authorizeRole } from '../middlwares/auth';
 
 const router = express.Router();
+const userService = new UserService();
+const userController = new UserController(userService);
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/profile/:id', authenticateToken, getUserProfile);
+const doctorService = new DoctorService();
+const doctorController = new DoctorController(doctorService);
 
-router.get('/doctors', getAllDoctors);
-router.get('/doctor/profile/:doctorId', getDoctorProfile);
-router.post('/doctor/profile/create', authenticateToken, authorizeRole(['doctor']), createDoctorProfile);
-router.patch('/doctor/profile/edit/:userId', authenticateToken, authorizeRole(['doctor']), updateDoctorProfile);
+router.post('/register', userController.registerUser);
+router.post('/login', userController.loginUser);
+router.get('/profile/:id', authenticateToken, userController.getUserProfile);
+
+router.get('/doctors', doctorController.getAllDoctors);
+router.get('/doctor/profile/:doctorId', doctorController.getDoctorProfile);
+router.post('/doctor/profile/create', authenticateToken, authorizeRole(['doctor']), doctorController.createDoctorProfile);
+router.patch('/doctor/profile/edit/:userId', authenticateToken, authorizeRole(['doctor']), doctorController.updateDoctorProfile);
 
 export default router;

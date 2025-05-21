@@ -46,7 +46,10 @@ const DoctorProfilePage = () => {
       <p>Education: {doctor.profile?.education}</p>
       <p>Experience: {doctor.profile?.experience}</p>
       <p>Bio: {doctor.profile?.bio}</p>
-      {doctor.profile?.photoUrl && <img src={doctor.profile.photoUrl} alt="Doctor" width={200} />}
+      <div>
+      {doctor.photoUrl && <img src={doctor.photoUrl} alt="Doctor" width={200} />}
+      </div>
+      
       {isOwnProfile && (
         <>
           <EditDoctorProfileForm userId={Number(doctorId)} />

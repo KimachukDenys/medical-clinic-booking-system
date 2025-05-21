@@ -16,8 +16,8 @@ Appointment.belongsTo(User, { foreignKey: 'patientId', as: 'patient' });
 Appointment.belongsTo(User, { foreignKey: 'doctorId', as: 'doctor' });
 Appointment.belongsTo(Service, { foreignKey: 'serviceId' });
 
-Appointment.hasOne(Review, { foreignKey: 'appointmentId' });
-Review.belongsTo(Appointment, { foreignKey: 'appointmentId' });
+Appointment.hasOne(Review, { foreignKey: 'appointmentId', as: 'review' });
+Review.belongsTo(Appointment, { foreignKey: 'appointmentId', as: 'appointment' });
 
 Review.belongsTo(User, { foreignKey: 'userId', as: 'author' });
 User.hasMany(Review, { foreignKey: 'userId' });
