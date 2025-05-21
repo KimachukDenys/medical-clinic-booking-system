@@ -20,7 +20,8 @@ export const createDoctorProfile = async (
     education: string;
     experience: string;
     bio: string;
-    photoUrl?: string;
+    specialization: string;
+    price: number;
   },
   token: string
 ) => {
@@ -38,7 +39,8 @@ export const updateDoctorProfile = (
     education?: string;
     experience?: string;
     bio?: string;
-    photoUrl?: string;
+    specialization?: string;
+    price?: number;
   },
   token: string
 ) => {

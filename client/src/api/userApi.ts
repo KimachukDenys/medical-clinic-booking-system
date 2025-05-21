@@ -12,3 +12,12 @@ export const getUserProfile = (userId: number) => {
     },
   });
 };
+
+export const updateUserProfile = (userId: number, data: FormData) => {
+  const token = localStorage.getItem('token');
+  return axios.put(`${API_URL}/profile/${userId}`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

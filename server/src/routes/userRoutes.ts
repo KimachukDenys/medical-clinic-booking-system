@@ -4,6 +4,7 @@ import { UserService } from '../services/userService';
 import { DoctorController } from '../controllers/doctorController';
 import { DoctorService } from '../services/doctorService';
 import { authenticateToken, authorizeRole } from '../middlwares/auth';
+import { uploadImage } from '../middlwares/upload';
 
 const router = express.Router();
 const userService = new UserService();
@@ -15,10 +16,11 @@ const doctorController = new DoctorController(doctorService);
 router.post('/register', userController.registerUser);
 router.post('/login', userController.loginUser);
 router.get('/profile/:id', authenticateToken, userController.getUserProfile);
+router.put('/profile/:id', authenticateToken, uploadImage, userController.editUserProfile);
 
 router.get('/doctors', doctorController.getAllDoctors);
 router.get('/doctor/profile/:doctorId', doctorController.getDoctorProfile);
 router.post('/doctor/profile/create', authenticateToken, authorizeRole(['doctor']), doctorController.createDoctorProfile);
-router.patch('/doctor/profile/edit/:userId', authenticateToken, authorizeRole(['doctor']), doctorController.updateDoctorProfile);
+router.put('/doctor/profile/edit/:userId', authenticateToken, authorizeRole(['doctor']), doctorController.updateDoctorProfile);
 
 export default router;

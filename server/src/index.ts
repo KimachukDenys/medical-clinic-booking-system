@@ -1,4 +1,3 @@
-// src/index.ts
 import app from './app';
 import { sequelize } from './models';
 

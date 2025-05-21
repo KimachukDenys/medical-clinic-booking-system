@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Register from './components/auth/RegisterForm';
-import Login from './components/auth/LoginForm';
-import ServicesPage from './pages/ServicesPage';
-import AdminServicesPage from './pages/AdminServicesPage';
-import AdminCategoriesPage from './pages/AdminCategoriesPage';
-import ServiceDetailsPage from './pages/ServiceDetailsPage';
-import DoctorListPage from './pages/DoctorListPage';
-import DoctorProfilePage from './pages/DoctorProfilePage';
-import CreateDoctorProfilePage from './pages/CreateDoctorProfilePage';
-import EditServicePage from './pages/EditServicePage';
-import AppointmentsPage from './pages/AppointmentsPage';
+import HomePage from './pages/HomePage';
+import AuthPage from './pages/user/AuthPage';
+import ServicesPage from './pages/service/ServicesPage';
+import AdminServicesPage from './pages/admin/AdminServicesPage';
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
+import ServiceDetailsPage from './pages/service/ServiceDetailsPage';
+import DoctorListPage from './pages/doctor/DoctorListPage';
+import DoctorProfilePage from './pages/doctor/DoctorProfilePage';
+import CreateDoctorProfilePage from './pages/doctor/CreateDoctorProfilePage';
+import EditServicePage from './pages/service/EditServicePage';
+import AppointmentsPage from './pages/appointment/AppointmentsPage';
 import UpdateAppointmentForm from './components/services/UpdateAppointmentForm'; 
-import AppointmentDetailsPage from './pages/AppointmentDetailsPage';
-import UserProfilePage from './pages/UserProfilePage';
+import AppointmentDetailsPage from './pages/appointment/AppointmentDetailsPage';
+import UserProfilePage from './pages/user/UserProfilePage';
+import EditUserProfilePage from './pages/user/EditUserProfilePage';
 import ReviewFormPage from './pages/ReviewFormPage';
 import Navbar from './components/Navbar';
+import { parseJwt } from './utils/jwt';
 
 const App: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
@@ -25,25 +27,6 @@ const App: React.FC = () => {
     firstName: string;
     lastName: string;
   } | null>(null);
-
-  function parseJwt(token: string) {
-    try {
-      const base64Url = token.split('.')[1];
-      if (!base64Url) throw new Error("Invalid token format");
-
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      console.error('Помилка розшифровки токена:', e);
-      return null;
-    }
-  }
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -58,16 +41,16 @@ const App: React.FC = () => {
           firstName: payload.firstName,
           lastName: payload.lastName,
         });
+      } else {
+        localStorage.removeItem('token');
       }
     } else {
-      console.warn('Невалідний токен:', storedToken);
       localStorage.removeItem('token');
+      setToken(null);
+      setUserInfo(null);
     }
   }, []);
 
-
-
-  console.log(userInfo)
   const handleLogout = () => {
     setToken(null);
     setUserInfo(null);
@@ -77,13 +60,6 @@ const App: React.FC = () => {
   return (
     <Router>
       <div>
-        <h1>Медична Клініка</h1>
-        {!token && (
-          <>
-            <Register />
-            <Login setToken={setToken} />
-          </>
-        )}
         <Navbar
           id={userInfo?.id}
           role={userInfo?.role ?? null}
@@ -93,10 +69,10 @@ const App: React.FC = () => {
           isAuthenticated={!!token}
         />
 
-
         <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/auth" element={<AuthPage setToken={setToken} setUserInfo={setUserInfo} />} />
           <Route path="/services" element={<ServicesPage />} />
-
           <Route path="/services/:id" element={<ServiceDetailsPage />} />
           <Route path="/doctors" element={<DoctorListPage />} />
           <Route path="/doctors/:doctorId" element={<DoctorProfilePage />} />
@@ -104,12 +80,18 @@ const App: React.FC = () => {
           <Route path="/appointment/update/:id" element={<UpdateAppointmentForm />} />
           <Route path="/appointment/details/:id" element={<AppointmentDetailsPage />} />
           <Route path="/user/profile/:id" element={<UserProfilePage />} />
-          <Route path="/review/:id" element={<ReviewFormPage userId={userInfo?.id ?? null} />} />
-
+          <Route path="/user/profile/edit/:id" element={<EditUserProfilePage />} />
+          <Route path="/review/:id" element={<ReviewFormPage userId={userInfo?.id ?? null} token={localStorage.getItem('token')} />} />
+          {/* Роут для створення профілю лікаря, якщо авторизований як doctor */}
           {userInfo?.role === 'doctor' && (
             <Route path="/doctor/profile/create" element={<CreateDoctorProfilePage />} />
           )}
 
+
+          <Route path="/doctor/profile" element={<DoctorProfilePage />} />
+
+
+          {/* Адмін-панель, якщо роль admin */}
           {userInfo?.role === 'admin' && (
             <>
               <Route path="/admin/services" element={<AdminServicesPage />} />

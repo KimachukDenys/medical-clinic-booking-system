@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AppointmentService } from '../services/appointmentService';
 
 export class AppointmentController {
   constructor(private appointmentService: AppointmentService) {}
 
-  createAppointment = async (req: Request & { user?: any }, res: Response): Promise<void> => {
+  createAppointment = async (req: Request & { user?: any }, res: Response, next: NextFunction): Promise<void> => {
     if (!req.user) {
       res.status(401).json({ message: 'Unauthorized: user not found' });
       return;
@@ -19,12 +19,16 @@ export class AppointmentController {
         new Date(date)
       );
       res.status(201).json(newAppointment);
-    } catch {
-      res.status(500).json({ message: 'Failed to create appointment.' });
+    } catch (error) {
+      next(error);
     }
   };
 
-  updateAppointment = async (req: Request & { user?: { id: number; role: string } }, res: Response): Promise<void> => {
+  updateAppointment = async (
+    req: Request & { user?: { id: number; role: string } },
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const id = parseInt(req.params.id, 10);
       const { date, status } = req.body;
@@ -35,51 +39,39 @@ export class AppointmentController {
       });
 
       res.status(200).json({ message: 'Бронювання успішно оновлено.', updated });
-    } catch (error: any) {
-      if (error.message === 'NotFound'){
-        res.status(404).json({ message: 'Бронювання не знайдено.' });
-        return;
-      };
-
-      if (error.message === 'Forbidden'){
-        res.status(403).json({ message: 'Немає прав для зміни бронювання.' });
-        return;
-      };
-
-      res.status(500).json({ message: 'Не вдалося оновити бронювання.' });
+    } catch (error) {
+      next(error);
     }
   };
 
-  getAllAppointments = async (req: Request & { user?: { id: number; role: string } }, res: Response) => {
+  getAllAppointments = async (
+    req: Request & { user?: { id: number; role: string } },
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const appointments = await this.appointmentService.getAllAppointments(req.user!);
       res.status(200).json(appointments);
-    } catch {
-      res.status(500).json({ message: 'Не вдалося отримати бронювання.' });
+    } catch (error) {
+      next(error);
     }
   };
 
-  getAppointmentById = async (req: Request & { user?: { id: number; role: string } }, res: Response): Promise<void> => {
+  getAppointmentById = async (
+    req: Request & { user?: { id: number; role: string } },
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const id = parseInt(req.params.id, 10);
       const appointment = await this.appointmentService.getAppointmentById(id, req.user!);
       res.json(appointment);
-    } catch (error: any) {
-      if (error.message === 'NotFound'){
-        res.status(404).json({ message: 'Бронювання не знайдено' });
-        return;
-      };
-
-      if (error.message === 'Forbidden') {
-        res.status(403).json({ message: 'Доступ заборонено' });
-        return;
-      };
-
-      res.status(500).json({ message: 'Серверна помилка' });
+    } catch (error) {
+      next(error);
     }
   };
 
-  getBookedTimes = async (req: Request, res: Response): Promise<void> => {
+  getBookedTimes = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const doctorId = parseInt(String(req.query.doctorId), 10);
       const dateStr = String(req.query.date);
@@ -92,28 +84,22 @@ export class AppointmentController {
 
       const times = await this.appointmentService.getBookedTimes(doctorId, dateStr, serviceId);
       res.json(times);
-    } catch {
-      res.status(500).json({ message: 'Error fetching booked times' });
+    } catch (error) {
+      next(error);
     }
   };
 
-  deleteAppointment = async (req: Request & { user?: { id: number; role: string } }, res: Response): Promise<void> => {
+  deleteAppointment = async (
+    req: Request & { user?: { id: number; role: string } },
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const id = parseInt(req.params.id, 10);
       await this.appointmentService.deleteAppointment(id, req.user!);
       res.json({ message: 'Бронювання успішно видалено' });
-    } catch (error: any) {
-      if (error.message === 'NotFound'){
-        res.status(404).json({ message: 'Бронювання не знайдено' });
-        return;
-      };
-        
-      if (error.message === 'Forbidden'){
-        res.status(403).json({ message: 'У вас немає прав для видалення' });
-        return;
-      };
-      
-      res.status(500).json({ message: 'Серверна помилка' });
+    } catch (error) {
+      next(error);
     }
   };
-};
+}

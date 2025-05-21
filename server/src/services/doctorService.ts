@@ -50,7 +50,6 @@ export class DoctorService {
     return service.doctors ?? [];
   }
 
-  /* ---------- довідник лікарів ---------- */
 
   async getAllDoctors() {
     return User.findAll({
@@ -60,7 +59,6 @@ export class DoctorService {
     }) as unknown as UserWithProfile[];
   }
 
-  /* ---------- профіль лікаря ---------- */
 
   async createDoctorProfile(userId: number, data: ProfileCreateData) {
     const user = await User.findByPk(userId);
@@ -69,7 +67,6 @@ export class DoctorService {
     const exists = await DoctorProfile.findOne({ where: { userId } });
     if (exists) throw new Error('Conflict:Profile');
 
-    /* ➊ тип уже опціональний, тому можна передати все, що є в body */
     return DoctorProfile.create({ userId, ...data });
   }
 
@@ -85,14 +82,6 @@ export class DoctorService {
       price: data.price ?? profile.price,
     });
     await profile.save();
-
-    if (data.photoUrl !== undefined) {
-      const doctor = await User.findByPk(userId);
-      if (doctor) {
-        doctor.photoUrl = data.photoUrl;
-        await doctor.save();
-      }
-    }
     return profile;
   }
 

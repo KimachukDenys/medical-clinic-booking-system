@@ -27,7 +27,7 @@ router.put('/update/:id', authenticateToken, authorizeRole(['admin']), serviceCo
 router.post('/appointments', authenticateToken, appointmentController.createAppointment);
 router.get('/appointments/list', authenticateToken, appointmentController.getAllAppointments);
 router.get('/appointments/details/:id', authenticateToken, appointmentController.getAppointmentById);
-router.put('/appointments/:id', authenticateToken, appointmentController.updateAppointment);
+router.put('/appointments/update/:id', authenticateToken, authorizeRole(['doctor']), appointmentController.updateAppointment);
 router.get('/appointments/booked', authenticateToken, appointmentController.getBookedTimes);
 router.delete('/appointments/:id', authenticateToken, appointmentController.deleteAppointment);
 

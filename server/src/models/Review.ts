@@ -29,7 +29,7 @@ Review.init({
   userId: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: { model: 'users', key: 'id' }  // ДОДАНО
+    references: { model: 'users', key: 'id' }
   },
   rating: {
     type: DataTypes.INTEGER,
