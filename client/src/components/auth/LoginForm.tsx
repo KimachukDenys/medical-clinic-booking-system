@@ -1,6 +1,6 @@
-//src/components/auth/LoginForm.tsx
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginCredentials {
   email: string;
@@ -12,6 +12,7 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ setToken }) => {
+  const navigate = useNavigate();
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -27,26 +28,27 @@ const Login: React.FC<LoginProps> = ({ setToken }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     try {
       const response = await axios.post('http://localhost:5000/api/users/login', credentials);
       const token = response.data.token;
-  
-      //зберігаємо токен у localStorage
+
       localStorage.setItem('token', token);
-      setToken(token); 
-  
+      setToken(token);
+
+      setError(null);
       alert('Login successful!');
+      navigate('/');
     } catch (error: any) {
       setError(error.response?.data?.message || 'Something went wrong');
     }
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
+    <div className="max-w-md mx-auto">
+      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">Вхід</h2>
+      {error && <p className="mb-4 text-red-600 text-center">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="email"
           name="email"
@@ -54,16 +56,23 @@ const Login: React.FC<LoginProps> = ({ setToken }) => {
           value={credentials.email}
           onChange={handleChange}
           required
+          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
         />
         <input
           type="password"
           name="password"
-          placeholder="Password"
+          placeholder="Пароль"
           value={credentials.password}
           onChange={handleChange}
           required
+          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
         />
-        <button type="submit">Login</button>
+        <button
+          type="submit"
+          className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
+        >
+          Увійти
+        </button>
       </form>
     </div>
   );

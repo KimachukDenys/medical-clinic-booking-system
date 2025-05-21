@@ -1,7 +1,19 @@
-import { DataTypes, Model } from 'sequelize';
+import {
+  DataTypes,
+  Model,
+  InferAttributes,
+  InferCreationAttributes,
+  CreationOptional,
+} from 'sequelize';
 import sequelize from '../config/database';
 
-class Review extends Model {}
+class Review extends Model<InferAttributes<Review>, InferCreationAttributes<Review>> {
+  declare id: CreationOptional<number>;
+  declare appointmentId: number;
+  declare userId: number;
+  declare rating: number;
+  declare comment: string | null;
+}
 
 Review.init({
   id: {
@@ -14,6 +26,11 @@ Review.init({
     allowNull: false,
     references: { model: 'appointments', key: 'id' }
   },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'users', key: 'id' }
+  },
   rating: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -21,6 +38,7 @@ Review.init({
   },
   comment: {
     type: DataTypes.TEXT,
+    allowNull: true,
   }
 }, {
   sequelize,
@@ -28,5 +46,6 @@ Review.init({
   tableName: 'reviews',
   timestamps: true,
 });
+
 
 export default Review;

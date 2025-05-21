@@ -1,29 +1,46 @@
-// src/controllers/categoryController.ts
-import { Request, Response } from 'express';
-import Category from '../models/Categories';
+import { Request, Response, NextFunction } from 'express';
+import { CategoryService } from '../services/categoryService';
 
-// Створити категорію (тільки адмін)
-export const createCategory = async (req: Request, res: Response) => {
-  const { name } = req.body;
+export class CategoryController {
+  constructor(private categoryService: CategoryService) {}
 
-  try {
-    const newCategory = await Category.create({
-      name,
-    });
-    res.status(201).json(newCategory);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Failed to create category.' });
-  }
-};
+  createCategory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { name } = req.body;
+      const newCategory = await this.categoryService.createCategory(name);
+      res.status(201).json(newCategory);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-// Отримати всі категорії
-export const getAllCategories = async (req: Request, res: Response) => {
-  try {
-    const categories = await Category.findAll();
-    res.json(categories);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Failed to fetch categories.' });
-  }
-};
+  getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const categories = await this.categoryService.getAllCategories();
+      res.json(categories);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateCategory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = +req.params.id;
+      const { name } = req.body;
+      const updated = await this.categoryService.updateCategory(id, name);
+      res.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = +req.params.id;
+      await this.categoryService.deleteCategory(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  };
+}

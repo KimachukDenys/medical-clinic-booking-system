@@ -1,17 +1,30 @@
 import express from 'express';
-import { loginUser, registerUser } from '../controllers/userController';
-import { getAllDoctors, getDoctorProfile, createDoctorProfile, updateDoctorProfile } from '../controllers/doctorController';
-import { authenticateToken } from '../middlwares/auth';
-import { authorizeRole } from '../middlwares/auth';
+import { container } from '../di/container';
+import { UserController } from '../controllers/userController';
+import { DoctorController } from '../controllers/doctorController';
+import { DoctorService } from '../services/doctorService';
+import { authenticateToken, authorizeRole } from '../middlwares/auth';
+import { uploadImage } from '../middlwares/upload';
 
 const router = express.Router();
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
+const asyncHandler =
+  (fn: any) => (req: any, res: any, next: any) =>
+    Promise.resolve(fn(req, res, next)).catch(next);
 
-router.get('/doctors', getAllDoctors);
-router.get('/doctor/profile/:doctorId', getDoctorProfile);
-router.post('/doctor/profile/create', authenticateToken, authorizeRole(['doctor']), createDoctorProfile);
-router.put('/doctor/profile/edit/:userId', authenticateToken, authorizeRole(['doctor']), updateDoctorProfile);
+const userController = container.resolve(UserController);
+
+const doctorService = new DoctorService();
+const doctorController = new DoctorController(doctorService);
+
+router.post('/register', asyncHandler(userController.registerUser));
+router.post('/login', asyncHandler(userController.loginUser));
+router.get ('/profile/:id', authenticateToken, asyncHandler(userController.getUserProfile));
+router.put ('/profile/:id',authenticateToken, uploadImage, asyncHandler(userController.editUserProfile));
+
+router.get('/doctors', doctorController.getAllDoctors);
+router.get('/doctor/profile/:doctorId', doctorController.getDoctorProfile);
+router.post('/doctor/profile/create', authenticateToken, authorizeRole(['doctor']), doctorController.createDoctorProfile);
+router.put('/doctor/profile/edit/:userId', authenticateToken, authorizeRole(['doctor']), doctorController.updateDoctorProfile);
 
 export default router;

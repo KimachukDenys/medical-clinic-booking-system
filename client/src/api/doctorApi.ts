@@ -15,13 +15,13 @@ export const getDoctorProfile = async (doctorId: number) => {
 };
 
 // Створити профіль лікаря
-
 export const createDoctorProfile = async (
   profileData: {
     education: string;
     experience: string;
     bio: string;
-    photoUrl?: string;
+    specialization: string;
+    price: number;
   },
   token: string
 ) => {
@@ -39,7 +39,8 @@ export const updateDoctorProfile = (
     education?: string;
     experience?: string;
     bio?: string;
-    photoUrl?: string;
+    specialization?: string;
+    price?: number;
   },
   token: string
 ) => {

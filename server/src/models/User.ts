@@ -5,7 +5,7 @@ import Service from './Service';
 export type UserRole = 'patient' | 'doctor' | 'admin';
 export type Gender = 'male' | 'female' | 'other';
 
-interface UserAttributes {
+export interface UserAttributes {
   id: number;
   firstName: string;
   lastName: string;
@@ -29,6 +29,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public role!: UserRole;
   public gender?: Gender;
   public photoUrl?: string;
+  public services?: Service[];
 
   public addService!: BelongsToManyAddAssociationMixin<Service, number>;
   public getServices!: BelongsToManyGetAssociationsMixin<Service>;

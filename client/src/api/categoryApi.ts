@@ -11,3 +11,17 @@ export const createCategory = (data: { name: string }, token: string) =>
   });
 
 export const getAllCategories = () => axios.get(API_URL);
+
+export const updateCategory = (id: number, name: string, token: string) =>
+  axios.put(`${API_URL}/${id}`, { name }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const deleteCategory = (id: number, token: string) =>
+  axios.delete(`${API_URL}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });

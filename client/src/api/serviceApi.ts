@@ -26,6 +26,14 @@ export const getDoctorsForService = async (serviceId: number, token: string | nu
   });
 };
 
+export const getServicesForDoctor = async (doctorId: number, token: string | null) => {
+  return axios.get(`${API_URL}/${doctorId}/services`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
 export const createService = (data: FormData, token: string) => {
   return axios.post(`${API_URL}/create`, data, {
     headers: {
