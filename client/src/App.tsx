@@ -17,6 +17,7 @@ import UserProfilePage from './pages/user/UserProfilePage';
 import EditUserProfilePage from './pages/user/EditUserProfilePage';
 import ReviewFormPage from './pages/ReviewFormPage';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import { parseJwt } from './utils/jwt';
 
 const App: React.FC = () => {
@@ -100,6 +101,8 @@ const App: React.FC = () => {
             </>
           )}
         </Routes>
+
+        <Footer role={userInfo?.role ?? null} isAuthenticated={!!token} />
       </div>
     </Router>
   );
